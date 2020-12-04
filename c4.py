@@ -1,3 +1,6 @@
+import random
+
+
 def win_color(s):
     return "\x1b[6;30;42m" + s + "\x1b[0m"
 
@@ -18,6 +21,7 @@ class C4(object):
             [self.no_token_label for i in range(self.n_columns)]
             for j in range(self.n_rows)
         ]
+        random.seed()
 
     def __str__(self):
         output = ""
@@ -40,13 +44,17 @@ class C4(object):
                     return False
         return True
 
+    def column_is_full(self, column):
+        board_column = [self.board[i][column] for i in range(self.n_rows)]
+        empty = [c for c in board_column if c == self.no_token_label]
+        return len(empty) == 0
+
     def make_ai_move(self):
-        for i in range(self.n_rows)[-1::-1]:
-            for j in range(self.n_columns):
-                if self.board[i][j] == self.no_token_label:
-                    self.board[i][j] = self.ai_label
-                    return
-        return
+        while True:
+            c = random.randint(0, self.n_columns - 1)
+            if not self.column_is_full(c):
+                self.drop_token(c, self.ai_label)
+                return
 
     def player_has_vertical_win_in_column(self, c, label):
         i = 0

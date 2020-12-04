@@ -110,6 +110,19 @@ class C4Test(unittest.TestCase):
         )
         self.assertIsNone(c4.player_wins(2))
 
+    def test_colunn_is_full(self):
+        c4 = C4()
+        c4.board = [
+            ["-", "-", "-", 2, "-", "-", "-"],
+            ["-", "-", "-", 2, "-", "-", "-"],
+            ["-", "-", "-", 2, "-", "-", "-"],
+            ["-", "-", 2, 1, "-", "-", "-"],
+            ["-", "-", 2, 1, "-", "-", "-"],
+            ["-", "-", 1, 1, "-", "-", "-"],
+        ]
+        self.assertTrue(c4.column_is_full(3))
+        self.assertFalse(c4.column_is_full(2))
+
 
 if __name__ == "__main__":
     unittest.main()
