@@ -2,11 +2,8 @@ import random
 
 
 def win_color(s):
-    return "\x1b[6;30;42m" + s + "\x1b[0m"
-
-
-def lose_color(s):
-    return "\x1b[6;30;41m" + s + "\x1b[0m"
+    # https://stackoverflow.com/questions/287871/how-to-print-colored-text-in-python
+    return "\x1b[6;30;43m" + s + "\x1b[0m"
 
 
 class InvalidMoveError(ValueError):
@@ -17,10 +14,10 @@ class C4(object):
     def __init__(self):
         self.n_rows = 6
         self.n_columns = 7
-        self.no_token_label = "-"
+        self.no_token_label = "⚪"
         self.n_to_win = 4
-        self.ai_label = "B"
-        self.player_label = "R"
+        self.ai_label = "⚫"
+        self.player_label = "🔴"
         self.board = [
             [self.no_token_label for i in range(self.n_columns)]
             for j in range(self.n_rows)
@@ -41,7 +38,7 @@ class C4(object):
         for i in range(len(self.board)):
             row = "|".join(self.board[i])
             output += row + "\n"
-        output += " ".join([str(i) for i in range(self.n_columns)]) + "\n"
+        output += "  ".join([str(i) for i in range(self.n_columns)]) + "\n"
         return output
 
     def drop_token(self, column, token):
@@ -66,6 +63,8 @@ class C4(object):
         return len(empty) == 0
 
     def get_possible_moves(self, current_player, explore_n_moves_ahead=None):
+        # http://blog.gamesolver.org/solving-connect-four/03-minmax/
+        # http://inventwithpython.com/pygame/chapter10.html#_Toc316488761
         possible_moves = dict([(c, 0) for c in range(self.n_columns)])
 
         if self.board_is_full():
@@ -277,7 +276,7 @@ def main():
         cells = c4.player_wins(c4.ai_label)
         if cells is not None:
             for i, j in cells:
-                c4.board[i][j] = lose_color(c4.board[i][j])
+                c4.board[i][j] = win_color(c4.board[i][j])
             print(c4)
             print("AI wins!")
             break
