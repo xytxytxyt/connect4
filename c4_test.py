@@ -1,6 +1,6 @@
 import unittest
 
-from c4 import C4
+from c4 import C4, InvalidMoveError
 
 
 class C4Test(unittest.TestCase):
@@ -110,7 +110,7 @@ class C4Test(unittest.TestCase):
         )
         self.assertIsNone(c4.player_wins(2))
 
-    def test_colunn_is_full(self):
+    def test_column_is_full(self):
         c4 = C4()
         c4.board = [
             ["-", "-", "-", 2, "-", "-", "-"],
@@ -122,6 +122,21 @@ class C4Test(unittest.TestCase):
         ]
         self.assertTrue(c4.column_is_full(3))
         self.assertFalse(c4.column_is_full(2))
+        with self.assertRaises(InvalidMoveError):
+            c4.drop_token(3, 1)
+
+    def test_copy_from(self):
+        c4 = C4()
+        c4.board = [
+            [0, 0, 0, 0, 0, 0, 0],
+            [0, 0, 1, 0, 0, 0, 0],
+            [0, 0, 1, 1, 0, 0, 0],
+            [0, 0, 2, 2, 1, 0, 0],
+            [0, 0, 1, 2, 2, 1, 0],
+            [0, 0, 2, 2, 2, 1, 0],
+        ]
+        c4_copy = C4().copy_from(c4)
+        self.assertEqual(c4.board, c4_copy.board)
 
 
 if __name__ == "__main__":

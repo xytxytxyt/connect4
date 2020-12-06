@@ -9,6 +9,10 @@ def lose_color(s):
     return "\x1b[6;30;41m" + s + "\x1b[0m"
 
 
+class InvalidMoveError(ValueError):
+    pass
+
+
 class C4(object):
     def __init__(self):
         self.n_rows = 6
@@ -21,7 +25,16 @@ class C4(object):
             [self.no_token_label for i in range(self.n_columns)]
             for j in range(self.n_rows)
         ]
+        self.columns_played = []
+        self.explore_n_moves_ahead = 4
         random.seed()
+
+    def copy_from(self, other_c4):
+        for i in range(self.n_rows):
+            for j in range(self.n_columns):
+                self.board[i][j] = other_c4.board[i][j]
+        self.columns_played = list(other_c4.columns_played)
+        return self
 
     def __str__(self):
         output = ""
@@ -32,10 +45,13 @@ class C4(object):
         return output
 
     def drop_token(self, column, token):
+        if self.column_is_full(column):
+            raise InvalidMoveError(f"Column {column} is full")
         i = self.n_rows - 1
         while i > 0 and self.board[i][column] != self.no_token_label:
             i -= 1
         self.board[i][column] = token
+        self.columns_played.append(column)
 
     def board_is_full(self):
         for i in range(self.n_rows):
@@ -49,12 +65,47 @@ class C4(object):
         empty = [c for c in board_column if c == self.no_token_label]
         return len(empty) == 0
 
+    def get_possible_moves(self, current_player, explore_n_moves_ahead=None):
+        possible_moves = dict([(c, 0) for c in range(self.n_columns)])
+
+        if self.board_is_full():
+            return {}
+
+        if explore_n_moves_ahead == 0:
+            return possible_moves
+
+        if explore_n_moves_ahead is None:
+            explore_n_moves_ahead = self.explore_n_moves_ahead
+
+        for c in range(self.n_columns):
+            if self.column_is_full(c):
+                possible_moves.pop(c)
+                continue
+            next_move_c4 = C4().copy_from(self)
+            next_move_c4.drop_token(c, current_player)
+            if next_move_c4.player_wins(current_player):
+                return {
+                    c: (next_move_c4.n_columns * next_move_c4.n_rows + 1 - len(next_move_c4.columns_played)) / 2,
+                }
+            else:
+                opponent = (
+                    self.ai_label
+                    if current_player == self.player_label
+                    else self.player_label
+                )
+                next_possible_moves = next_move_c4.get_possible_moves(
+                    opponent, explore_n_moves_ahead - 1
+                )
+
+                possible_moves[c] -= sum(next_possible_moves.values())
+        return possible_moves
+
     def make_ai_move(self):
-        while True:
-            c = random.randint(0, self.n_columns - 1)
-            if not self.column_is_full(c):
-                self.drop_token(c, self.ai_label)
-                return
+        possible_moves = self.get_possible_moves(self.ai_label)
+        best_score = max(possible_moves.values())
+        best_moves = [m for m in possible_moves if possible_moves[m] == best_score]
+        best_move = random.choice(best_moves)
+        self.drop_token(best_move, self.ai_label)
 
     def player_has_vertical_win_in_column(self, c, label):
         i = 0
